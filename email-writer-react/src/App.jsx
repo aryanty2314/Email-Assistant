@@ -1,101 +1,64 @@
-import { useState } from 'react'
-import './App.css'
-import { Box, Container, FormControl, InputLabel, MenuItem, TextField, Typography, Select, Button, CircularProgress } from '@mui/material';
-import axios from 'axios';
+import { useState } from 'react';
+import './App.css';
 
 function App() {
-const [emailContent, setEmailContent] = useState('');
-const [tone, setTone] = useState('');
-const [generatedReply, setGeneratedReply] = useState('');
-const [loading, setLoading] = useState(false);
-const [error, setError] = useState('');
-const handleSubmit = async () =>{
-setLoading(true);
-setError('');
-try {
-  const response = await axios.post("http://localhost:8080/email/api/generate",
-    {
-      emailContent,
-      tone
-    });
-    setGeneratedReply(typeof response.data === 'string' ? response.data : JSON.stringify(response.data));
-} catch (error) {
-  setError('Failed to generate email reply. Please try again');
-  console.error(error);
-}
-finally
-{
-  setLoading(false);
-}
-};
-return (
-  <Container maxWidth="md" sx={{ py: 4 }}>
-      <Typography variant='h3' component="h1" gutterBottom>
-      Email Reply Generator
-    </Typography>
-    <Box sx={{ mx: 3 }}>
-      <TextField
-        fullWidth
-        multiline
-        rows={6}
-        variant='outlined'
-        label="Original Email Content"
-        value={emailContent || ''}
+  const [emailContent, setEmailContent] = useState('');
+  const [tone, setTone] = useState('');
+  const [generatedReply, setGeneratedReply] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch("http://localhost:8080/email/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emailContent, tone })
+      });
+
+      const data = await response.text();
+      setGeneratedReply(data);
+    } catch (error) {
+      setError('Failed to generate email reply. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="container">
+      <h1>Email Reply Generator</h1>
+
+      <textarea 
+        placeholder="Enter the original email content here..."
+        value={emailContent}
         onChange={(e) => setEmailContent(e.target.value)}
-        sx={{ mb: 2 }}/>
+      ></textarea>
 
-         <FormControl fullWidth sx={{ mb: 2 }}>
-        <InputLabel>Tone (Optional)</InputLabel>
-        <Select
-          
-          value={tone || ''}
-          label={"Tone (Optional)"}
-          onChange={(e) => setTone(e.target.value)}>
+      <select value={tone} onChange={(e) => setTone(e.target.value)}>
+        <option value="">Select Tone (Optional)</option>
+        <option value="professional">Professional</option>
+        <option value="casual">Casual</option>
+        <option value="friendly">Friendly</option>
+      </select>
 
-          <MenuItem value="">None</MenuItem>
-          <MenuItem value="professional">Professional</MenuItem>
-          <MenuItem value="casual">Casual</MenuItem>
-          <MenuItem value="friendly">Friendly</MenuItem>
-        </Select>
-      </FormControl>
-        <Button
-        variant='contained'
-        onClick={handleSubmit}
-        disabled={!emailContent || loading}
-        fullWidth
-        >
-          {loading ? <CircularProgress size={24}/> : "Generate Reply"}
-        </Button>
-    </Box>
-    {error && (
-    <Typography color='error' sx={{ mb:2}}>
-    {error}
-       </Typography>
-    )}
+      <button onClick={handleSubmit} disabled={!emailContent || loading}>
+        {loading ? <div className="loader"></div> : "Generate Reply"}
+      </button>
 
-    {generatedReply &&
-    (
-      <Box sx = {{ mt:3 }}>
-        <Typography variant='h6' gutterBottom>
-       Generated Reply :
-    </Typography>
-    <TextField
-    fullWidth
-    multiline
-    rows={6}
-    variant='outlined'
-    value={generatedReply || ''}
-    inputProps={{ readOnly: true}}/>
-    <Button
-    variant='outlined'
-    sx={{ mt:2 }}
-    onClick={() => navigator.clipboard.writeText(generatedReply)}>
-      Copy to Clipboard
-    </Button>
-      </Box>
-    )}
-  </Container>
-)
+      {error && <p className="error">{error}</p>}
+
+      {generatedReply && (
+        <div className="output">
+          <h3>Generated Reply:</h3>
+          <textarea readOnly value={generatedReply}></textarea>
+          <button className="copy-btn" onClick={() => navigator.clipboard.writeText(generatedReply)}>Copy to Clipboard</button>
+        </div>
+      )}
+    </div>
+  );
 }
 
-export default App
+export default App;
