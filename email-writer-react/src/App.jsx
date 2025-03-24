@@ -12,7 +12,7 @@ function App() {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch("http://localhost:8080/email/api/generate", {
+      const response = await fetch("https://email-writer-assistant.onrender.com", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ emailContent, tone })
@@ -22,6 +22,7 @@ function App() {
       setGeneratedReply(data);
     } catch (error) {
       setError('Failed to generate email reply. Please try again.');
+      console.log(error);
     } finally {
       setLoading(false);
     }
@@ -35,7 +36,7 @@ function App() {
         placeholder="Enter the original email content here..."
         value={emailContent}
         onChange={(e) => setEmailContent(e.target.value)}
-      ></textarea>
+      />
 
       <select value={tone} onChange={(e) => setTone(e.target.value)}>
         <option value="">Select Tone (Optional)</option>
@@ -53,7 +54,7 @@ function App() {
       {generatedReply && (
         <div className="output">
           <h3>Generated Reply:</h3>
-          <textarea readOnly value={generatedReply}></textarea>
+          <textarea readOnly value={generatedReply} />
           <button className="copy-btn" onClick={() => navigator.clipboard.writeText(generatedReply)}>Copy to Clipboard</button>
         </div>
       )}
