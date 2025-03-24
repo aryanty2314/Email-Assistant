@@ -1,6 +1,7 @@
 package com.email.writer.service;
 
 import com.email.writer.Controller.EmailRequest;
+import com.email.writer.Controller.GeminiRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,18 +15,32 @@ import java.util.Map;
 public class EmailService {
 
     private final WebClient webClient;
+    private GeminiService geminiService;
 
-    @Value("${gemini.api.url}")
+//    @Value("${gemini.api.url}")
     private String geminiApiUrl;
 
-    @Value("${gemini.api.key}")
+//    @Value("${gemini.api.key}")
     private String geminiApiKey;
 
     // Properly injecting WebClient.Builder
-    @Autowired
-    public EmailService(WebClient.Builder webClientBuilder) {
+
+    public EmailService(WebClient.Builder webClientBuilder, GeminiService geminiService) {
         this.webClient = webClientBuilder.build();
+        this.geminiService = geminiService;
+
+        // Fetch values from MongoDB once and handle null cases
+        GeminiRequest geminiRequest = geminiService.getUrlAndKey();
+        if (geminiRequest != null) {
+            this.geminiApiUrl = geminiRequest.getGemini_Url();
+            this.geminiApiKey = geminiRequest.getGemini_Key();
+        } else {
+            throw new RuntimeException(" No API key and URL found in MongoDB!");
+        }
     }
+
+
+
 
     public String generateReply(EmailRequest emailRequest) {
         // Build the prompt
@@ -49,6 +64,7 @@ public class EmailService {
                 .bodyValue(request)
                 .retrieve()
                 .bodyToMono(String.class)
+
                 .block();
 
 
