@@ -12,7 +12,7 @@ function App() {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch("https://email-writer-assistant.onrender.com", {
+      const response = await fetch("http://localhost:8080/email/api/generate",{
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ emailContent, tone })
